@@ -83,7 +83,7 @@ IE 浏览器备份账号  ssrszdx@outlook.com
 
     知乎管理
 
-    chrome 浏览器备份账号  dxpkuer@gmail.com
+    chrome 浏览器备份账号
 https://gcc.gnu.org/
 
 [CS自学指南 (csdiy.wiki)](https://csdiy.wiki/)
