@@ -1,0 +1,562 @@
+Loading web-font TeX/Main/Bold
+Skip to Main Content
+
+    IEEE.org
+    IEEE Xplore
+    IEEE SA
+    IEEE Spectrum
+    More Sites 
+
+        Cart 
+        Create Account
+        Personal Sign In 
+
+IEEE Xplore logo - Link to home
+
+    Browse
+    My Settings
+    Help
+
+Access provided by:
+Peking University
+Sign Out
+IEEE logo - Link to IEEE main site homepage
+ADVANCED SEARCH
+Journals & Magazines > IEEE Transactions on Knowledg... > Volume: 35 Issue: 10
+Optimizing Spaced Repetition Schedule by Capturing the Dynamics of Memory
+Publisher: IEEE
+Cite This
+PDF
+Jingyong Su ; Junyao Ye ; Liqiang Nie ; Yilong Cao ; Yongyong Chen
+All Authors
+432
+Full
+Text Views
+
+    Alerts
+
+Abstract
+Document Sections
+
+    I.
+    Introduction
+    II.
+    Related Work
+    III.
+    Memory Model Based on Time-Series
+    IV.
+    Spaced Repetition Schedule Optimization
+    V.
+    Experiment
+
+Show Full Outline
+Authors
+Figures
+References
+Keywords
+Metrics
+Abstract:
+Spaced repetition, namely, learners review items in a given schedule, has been proven powerful for memorization and practice of skills. Most current spaced repetition methods focus on either predicting student recall or designing an optimal review schedule, thus omitting the integrity of the spaced repetition system. In this work, we propose a novel spaced repetition schedule framework by capturing the dynamics of memory, which alternates memory prediction and schedule optimization to improve the efficiency of learners’ reviews. First, the framework collects logs from students’ reviews and builds memory models with Markov property to capture the dynamics of memory. Then, the spaced repetition optimization is transformed a stochastic shortest path problem and solved via the value iteration method. We also construct a new benchmark dataset for spaced repetition, which is the first to contain time-series information during learners’ memorization. Experimental results on the collected data from the real world and the simulated environment demonstrate that the proposed approach reduces 64% error and 17% cost in predicting recall rates and optimizing schedules compared to several baselines. We have publicly released the dataset containing 220 million rows and codes used in this paper at: https://github.com/maimemo/SSP-MMC-Plus .
+Published in: IEEE Transactions on Knowledge and Data Engineering ( Volume: 35 , Issue: 10 , 01 October 2023 )
+Page(s): 10085 - 10097
+Date of Publication: 06 March 2023
+ISSN Information:
+INSPEC Accession Number: 23708279
+DOI: 10.1109/TKDE.2023.3251721
+Publisher: IEEE
+Funding Agency:
+SECTION I.
+Introduction
+
+Memory plays an important role in learning. To preserve long-term memory efficiently, students need to regularly review what they have learned over a lengthy period of time, a technique known as spaced repetition. The spacing effect and forgetting curve, which were identified in the basic memory experiment of [1] , are the inspiration for spaced repetition. Researchers have worked extensively on optimizing spaced repetition to predict learners’ memory and schedule efficient review tasks. There is an optimal review schedule, according to meta-analyses of review intervals in [2] , [3] . Additionally, a number of studies verify that the students of medicine [4] , statistics [5] , history [6] all benefit significantly from the use of spaced repetition.
+
+With more students studying online on e-learning platforms, it is feasible to collect extensive learning data. Based on that, many efforts have been dedicated to how to create intelligent tutoring systems via data mining and machine learning techniques [7] , [8] . One of the system's main functions is to schedule learning and review tasks for learners. In particular, Settle and Meeder [9] develop a trainable memory prediction model that aids learners in deciding which skills require review. Rafferty et al. [10] formulate instruction as a partially observable Markov decision process (POMDP) planning problem, which is often used in sequential optimization [11] . Meanwhile, they explore the optimal strategies with deep reinforcement learning (DRL) methods, which are powerful for making sequential decision [12] , [13] . These techniques increase learners’ effectiveness and engagement, and therefore, are quite practical in real-world scenarios.
+
+Previous research, however, has either focused on predicting learners’ memory or designing optimal scheduling. The lack of optimal scheduling in predicting memory prevents it from improving the learners’ efficiency directly; the lack of predicting memory in optimal scheduling makes it challenging to fit the real learners. Furthermore, the works of predicting memory [9] , [14] , [15] focus more on the statistical than the time-series features of learners’ memory behaviors. Many samples that are noticeably different in time-series cannot be differentiated. Therefore, it hampers these memory models from correctly simulating learner memory (see ”Related Work” at Section II-A ). The accuracy of several algorithms used to schedule reviews based on such models is similarly constrained by the lack of time-series features. Additionally, the action spaces of previous DRL approaches [16] , [17] , [18] are rigid, making it difficult for students to supplement new learning stuff.
+
+This paper investigates how to predict learners’ memory based on time-series behavioral data during spaced repetition and uses it as a basis to build a scheduling algorithm to optimize the spaced repetition schedule. We collect a dataset containing time-series features of learners’ memory behaviors and propose a novel framework for spaced repetition, as shown in Fig. 1 , by processing memory prediction and schedule optimization alternately to improve the efficiency of learners’ review. In terms of memory prediction, we establish DHP-HLR (Difficulty Halflife P(recall) Halflife-Regression) model inspired by the two-component model of long-term memory [19] and GRU-HLR combining gated recurrent unit (GRU) [20] network and halflife regression (HLR) model [9] . Meanwhile, the state variables of DHP-HLR and the hidden layer variables of the GRU network capture the potential memory states and dynamics. We optimize the spaced repetition schedule based on memory models and a stochastic dynamic programming method to minimize learners’ memory costs on each item. It is found that for predicting memory, the use of time-series features effectively reduces prediction error while capturing memory dynamics. For review schedule, the proposed scheduling algorithm SSP-MMC based on the time-series model, combined with stochastic dynamic programming to minimize the memory cost, outperforms other state-of-the-art methods. To summarize, the main contributions of this paper are:
+
+    We propose a novel spaced repetition schedule framework by capturing the dynamics of memory, which associates memory prediction with optimal scheduling to improve the efficiency of learners’ reviews.
+    Fig. 1. - The framework of our method is separated into two main parts: local in green and remote in red. Each time a user examines a word on the remote, the review events are locally recorded. After the learner has finished all of the day's reviews, the log is submitted to the spaced repetition log collection on the remote. Then, logs will be collectively processed to extract the time-series features for training the memory prediction model. Then the optimizing algorithm searches for the optimal spaced repetition schedule based on the dynamics of memory captured by the memory model. Periodically, the local will be updated with the optimal policy and model parameters. The local spaced repetition scheduler determines the next review date for words, while the local memory state predictor determines the memory state for each review.
+    Fig. 1.
+
+    The framework of our method is separated into two main parts: local in green and remote in red. Each time a user examines a word on the remote, the review events are locally recorded. After the learner has finished all of the day's reviews, the log is submitted to the spaced repetition log collection on the remote. Then, logs will be collectively processed to extract the time-series features for training the memory prediction model. Then the optimizing algorithm searches for the optimal spaced repetition schedule based on the dynamics of memory captured by the memory model. Periodically, the local will be updated with the optimal policy and model parameters. The local spaced repetition scheduler determines the next review date for words, while the local memory state predictor determines the memory state for each review.
+
+    Show All
+
+    To the best of our knowledge, this is the first study to apply the time-series features to model long-term memory, making the model trained directly from the memory behaviors of learners.
+
+    We build and publicly release our spaced repetition log dataset with 220 million rows, the first to include time-series data.
+
+This paper is a substantial extension of our previous conference paper A Stochastic Shortest Path Algorithm for Optimizing Spaced Repetition Scheduling [21] , where we proposed DHP-HLR model to predict memory and SSP-MMC algorithm to optimize the schedule. Compared with the conference version, we add GRU-HLR to capture memory dynamics and reduce memory prediction error while streamlining manual intervention in adjusting model parameters. The extended experiments compare more benchmark memory models and analyze the causes of error prediction. Furthermore, we discover that the proposed SSP-MMC algorithm is well compatible with the hidden layer state of GRU, which may be employed as state spaces in the Markov decision-making process.
+
+The rest of this paper is organized as follows. A brief review of related work is reported in Section II . The proposed DHP-HLR and GRU-HLR are elaborated in Section III . The proposed SSP-MMC algorithm is presented in Section IV . Extensive experimental results and discussions are reported in Section V , and a conclusion is given in Section VI .
+SECTION II.
+Related Work
+
+Relevant prior work includes studies of memory models and optimizing schedules.
+A. Human Memory Models
+
+There are many studies on modeling human memory to improve teaching. Ebbinghaus [1] first proposed the forgetting curve to illustrate memory decay if no review. Anderson [14] proposed ACT-R theory, whose declarative memory module assumes that each review will produce a forgetting curve. These models do not distinguish the results of review (remembered or forgotten), and only consider the number of reviews and the interval between reviews [22] . Mozer et al. [15] introduced the multiscale context model, which combines two cognitive theories and divides unsuccessful and successful recall, where some weights are hand-picked. Settle and Meeder [9] used the machine learning technique and exponential forgetting curve to predict student recall rates. Their feature sets include the number of times a student correctly and incorrectly recall but dismiss the time-series information in the history of review.
+B. Optimization Schedules
+
+Hand-Crafted Methods. Prior to the mass adoption of e-learning, traditional spaced repetition schedules were the mainstream. One of the first schedules was a geometric progression with a common ratio of five, introduced by Pimsleur [23] . Leitner [24] proposed a heuristic schedule based on physical boxes, where it controls the reviews’ frequency of different flashcards by moving them to boxes of various sizes. By contrast, SuperMemo was the original digital spaced repetition algorithm, receiving users’ interactions to update its schedule. Its program aims to keep users’ forgetting rate at 5% [25] , but there is no proof that it is optimal. These schedules rely on hand-crafted rules to determine spacing intervals for review and have less adaptability and theoretical guarantees.
+
+Stochastic Control. Recently, Reddy et al. [26] proposed a queueing network model to maximize the learning speed for the Leitner system, which was constrained and not tested for accuracy. Tabibian et al. [27] introduced marked time-series point processes to represent review events in spaced repetition and designed an algorithm named MEMORIZE based on stochastic optimal control to make a tradeoff between recall probability and the number of reviews. In their memory model, the forgetting rate dynamics were not time-varying. Upadhyay et al. [28] validated MEMORIZE in an actual interventional experiment. Hunziker et al. [29] used a greedy algorithm to maximize the average recall probability during the learning process, where they assumed recall and forgetting had the same impact on memory. These methods imposed strict conditions on their human memory models constraining their generality.
+
+Deep Reinforcement Learning. Reddy et al. [16] proposed a model-free DRL method to maximize the expected number of items recalled. Sinha [17] improved the DRL method by using Long Short Term Memory (LSTM) [30] neural network to predict reward. These studies assumed that the intervals between each adjacent review are constant and oversimplified. To consider the varying internals in the real world, Yang et al. [18] utilized Time-LSTM to estimate the recall probabilities with time interval input. Nioche et al. [31] proposed a model-based planning approach at the level of individual learners and items. These approaches formulated scheduling of spaced repetition as a POMDP, encoding the memory of all material into one single state variable, making it hard to introduce new stuff during the learning period. Furthermore, it is impractical that the agent could only learn one item per session in their simulation environments. Upadhyay et al. [32] introduced a deep reinforcement learning algorithm based on the policy gradient that encoded the history of all items’ reviews into a hidden state and allowed multiple items per session. But their method required determining the set of items before training, which is not convenient for students who need to import new items during the learning process.
+SECTION III.
+Memory Model Based on Time-Series
+
+The time-series data in spaced repetition and the memory model known as halflife regression (HLR) [9] are briefly introduced in this section. Then, we apply a manually created time-series model and a recurrent neural network to combine time-series features with the HLR.
+A. Time-Series Data in Spaced Repetition
+
+Inspired by work of [27] , we use a quadruplet to represent each review event: \begin{equation*} e :=(u, w, \Delta t, r), \tag{1} \end{equation*}
+View Source Right-click on figure for MathML and additional features. \begin{equation*} e :=(u, w, \Delta t, r), \tag{1} \end{equation*} where e is the review event that the learner u recalls item w successfully ( r=1 ) or unsuccessfully ( r=0 ) at interval \Delta t since last review. Based on that, we can concatenate (\Delta t, r) of each review to obtain sequential features: \begin{equation*} e_{i} :=(u, w, \boldsymbol{\Delta t}_{1:i-1}, \boldsymbol r_{1:i-1}, \Delta t_{i}, r_{i}) \tag{2} \end{equation*}
+View Source Right-click on figure for MathML and additional features. \begin{equation*} e_{i} :=(u, w, \boldsymbol{\Delta t}_{1:i-1}, \boldsymbol r_{1:i-1}, \Delta t_{i}, r_{i}) \tag{2} \end{equation*} where \boldsymbol{\Delta t}_{1:i-1} denotes the intervals between each review before the i th review and \boldsymbol r_{1:i-1} is the historical responses of reviews. The samples are shown in Table I .
+
+TABLE I Dataset Samples
+Table I- Dataset Samples
+
+The review event is defined to include the whole reviewing history of any student for any item. However, in the aforementioned review event, recall is binary (i.e., a user either recalls or forgets a word). The recall probability needs to be obtained to capture memory dynamics. The recall rate is defined by [9] as the percentage of times a word is correctly recalled throughout a review session, implying that different memory actions for the same word during a session are independent. In practice, the first recall event has a considerable impact on a learner's memory state and subsequent memories throughout the day. We, therefore, propose a more appropriate measure for recall ratio. We use n_{r=1/}N in a group of N individuals learning word w as the recall probability p : \begin{equation*} e_{i} :=(w, \boldsymbol{\Delta t}_{1:i-1}, \boldsymbol r_{1:i-1}, \Delta t_{i}, p_{i}, N). \tag{3} \end{equation*}
+View Source Right-click on figure for MathML and additional features. \begin{equation*} e_{i} :=(w, \boldsymbol{\Delta t}_{1:i-1}, \boldsymbol r_{1:i-1}, \Delta t_{i}, p_{i}, N). \tag{3} \end{equation*}
+
+By controlling the w , \boldsymbol{\Delta t}_{1:i-1} and \boldsymbol{r}_{1:i-1} , we can plot the p for each \Delta t to obtain the forgetting curve. When N is big enough, the ratio n_{r=1}/N gets close to the recall probability. However, there are almost 100,000 words in MaiMemo, and the behavior events collected for each word in different time-series are sparse. We need to group words to make a tradeoff between distinguishing different words and alleviating data sparsity. Since we are interested in the forgetting curve, words’ difficulties significantly influence the forgetting slope. As a result, we try to use the recall ratio the next day after learning them for the first time as a criterion for classifying the difficulties of words. The distribution of the recall ratio is shown in Fig. 2(a) .
+Fig. 2. - The distributions of P(recall) and difficulty. The easiest words with $\text {P(recall)}> 0.85$P( recall )> 0.85 are assigned $d=1$d=1 and the hardest words $\text {P(recall)}\leq 0.45$P( recall )≤0.45 are assigned $d=10$d=10. The difficulties of the remaining words are assigned from 2 to 9 by dividing remaining interval of P(recall) equaly into eight parts.
+Fig. 2.
+
+The distributions of P(recall) and difficulty. The easiest words with \text {P(recall)}>0.85 are assigned d=1 and the hardest words \text {P(recall)}\leq 0.45 are assigned d=10 . The difficulties of the remaining words are assigned from 2 to 9 by dividing remaining interval of P(recall) equaly into eight parts.
+
+Show All
+
+We can see from the data distribution that the recall ratio is mostly between 0.45 and 0.85. The words are divided into ten difficulty groups for the balance and density of grouping data, shown in Fig. 2(b) and Table II , respectively. The symbol d indicates the difficulty; the higher the number, the greater the difficulty. Then the exponential forgetting curve function p_{i} = 2^{-\Delta t_{i}/h_{i-1}} can be used to fit the halflife h_{i} of memory and add history of recall probabilities: \begin{equation*} e_{i} :=(d, \boldsymbol{\Delta t}_{1:i-1}, \boldsymbol r_{1:i-1}, \boldsymbol p_{1:i-1}, \Delta t_{i}, p_{i}, h_{i-1}, N), \tag{4} \end{equation*}
+View Source Right-click on figure for MathML and additional features. \begin{equation*} e_{i} :=(d, \boldsymbol{\Delta t}_{1:i-1}, \boldsymbol r_{1:i-1}, \boldsymbol p_{1:i-1}, \Delta t_{i}, p_{i}, h_{i-1}, N), \tag{4} \end{equation*}
+
+TABLE II Illustration of Words’ Difficulty
+Table II- Illustration of Words’ Difficulty
+
+The samples of (4) are shown in Table III . The \boldsymbol{\Delta t}_{1:i-1} , \boldsymbol r_{1:i-1} and \boldsymbol p_{1:i-1} are the times-series features which will be integrated into the HLR.
+TABLE III Illustration of Grouping
+Table III- Illustration of Grouping
+B. Halflife Regression Model (HLR)
+
+Settle and Meeder [9] define the halflife regression model as follows: \begin{equation*} p = 2^{-\Delta /h}, \tag{5} \end{equation*}
+View Source Right-click on figure for MathML and additional features. \begin{equation*} p = 2^{-\Delta /h}, \tag{5} \end{equation*} where p denotes the probability of recall, \Delta is the lag time since the item is last reviewed, and h is the halflife or strength of the learner's memory of the item.
+
+Let \hat{h}_{\boldsymbol \Theta } denote the estimated halflife, defined as: \begin{align*} \hat{h}_{\boldsymbol \Theta } & =2^{\boldsymbol \Theta \cdot \boldsymbol x} \\ \boldsymbol x & = (x_{\oplus },x_{\ominus }, \boldsymbol{lex}), \tag{6} \end{align*}
+View Source Right-click on figure for MathML and additional features. \begin{align*} \hat{h}_{\boldsymbol \Theta } & =2^{\boldsymbol \Theta \cdot \boldsymbol x} \\ \boldsymbol x & = (x_{\oplus },x_{\ominus }, \boldsymbol{lex}), \tag{6} \end{align*} where \boldsymbol \Theta is a weight vector for the feature vector \boldsymbol x , which consists of the times a word is correctly recalled x_{\oplus } , the times incorrectly recalled x_{\ominus } and the lexeme tag \boldsymbol{lex} . These features capture the statistical information in each student's review history with each item.
+
+The HLR model is trained by the following loss function: \begin{equation*} loss=(p-\hat{p})^{2} + \alpha (h-\hat{h})^{2} + \lambda ||\boldsymbol \theta ||^{2}, \tag{7} \end{equation*}
+View Source Right-click on figure for MathML and additional features. \begin{equation*} loss=(p-\hat{p})^{2} + \alpha (h-\hat{h})^{2} + \lambda ||\boldsymbol \theta ||^{2}, \tag{7} \end{equation*} to optimize both p and h in the loss function.
+
+C. DHP-HLR Model
+
+We manually develop D ifficulty- H alflife- P (recall)-HLR with the Markov property for explainability and simplicity to enhance HLR. In DHP-HLR, the dimensionalities of time-series are decomposed into state variables and state-transition equations. We take into account the following four factors:
+
+    Halflife. It measures the storage strength of memory.
+
+    P(recall). It measures the retrieval strength [33] of memory. According to the spacing effect [3] , the interval between each review affects the halflife. When h is fixed, \Delta t and p are mapped one-to-one. We use p=2^{-\Delta t/h} instead of \Delta t as a state variable for normalization.
+
+    Result of recall. The halflife increases after recall and decreases after forgetting.
+
+    Difficulty. Intuitively the higher the difficulty, the harder the memory to be consolidated.
+
+The last halflife, recall probability, and halflife are used to project the time-series data into a three-dimensional space. As illustrated in Fig. 3 , the color denotes the degree of difficulty. Observing the projection of the data, we notice two phenomena: h_{i}>h_{i-1} when r_{i}=1 and h_{i}< h_{i-1} when r_{i}=0 . They imply that a word's halflife lengthens if a student remembers it throughout a review. In turn, the halflife shortens if the learner forgets. To further explore the dynamics of halflife during reviews, we extract a group of adjacent review events shown in Fig. 4 . Obviously, as the time between reviews increases, the probability of recall decreases (blue line). And the halflife following a successful review lengthens (red, green, and orange lines) as the probability of memory declines, a phenomenon known as the lag effect [34] . According to the lag effect, recall after long intervals between learning sessions performs than recall after short intervals.
+Fig. 3. - The projection in Difficulty, Halflife, and P(recall). The $h_{i-1}$hi-1 and $h_{i}$hi denote last halflife and halflife. Similiarly, the $p_{i-1}$pi-1 denotes P(recall).
+Fig. 3.
+
+The projection in Difficulty, Halflife, and P(recall). The h_{i-1} and h_{i} denote last halflife and halflife. Similiarly, the p_{i-1} denotes P(recall).
+
+Show All
+Fig. 4. - Forgetting curves of a set of related review events. The blue line shows the forgetting curve after two reviews. And the red, green, and orange lines depict the forgetting curves after three reviews which follow the successful review in the blue line with three, four, and five days.
+Fig. 4.
+
+Forgetting curves of a set of related review events. The blue line shows the forgetting curve after two reviews. And the red, green, and orange lines depict the forgetting curves after three reviews which follow the successful review in the blue line with three, four, and five days.
+
+Show All
+
+Considering the above observations, the state-transition equation can be formulated as: \begin{equation*} h_{i} =[h_{i-1} \cdot (e^{\boldsymbol{\theta }_{1} \cdot \boldsymbol{x}_{i-1}}+1),e^{\boldsymbol{\theta }_{2} \cdot \boldsymbol{x}_{i-1}}] \cdot [r_{i-1}, 1-r_{i-1}]^{T}, \tag{8} \end{equation*}
+View Source Right-click on figure for MathML and additional features. \begin{equation*} h_{i} =[h_{i-1} \cdot (e^{\boldsymbol{\theta }_{1} \cdot \boldsymbol{x}_{i-1}}+1),e^{\boldsymbol{\theta }_{2} \cdot \boldsymbol{x}_{i-1}}] \cdot [r_{i-1}, 1-r_{i-1}]^{T}, \tag{8} \end{equation*} where \boldsymbol{x}_{i} = [\log d_{i-1}, \log h_{i-1},\log (1-p_{i})] is the feature vector. e^{\boldsymbol{\theta }_{1} \cdot \boldsymbol{x}_{i}}+1 guarantees the h_{i} after a recall greater than the h_{i-1} . And e^{\boldsymbol{\theta }_{2} \cdot \boldsymbol{x}_{i}} means that the halflife after a forgetting is constantly positive.
+
+The data shows that if learners forget during the review, the halflife of future successful recall will be shorter than those have not been forgotten, even under the same recall probability and last halflife conditions. It is explained by the fact that harder word is more likely to be forgotten. The word that has been forgotten is, therefore, considered more difficult. As a result, the difficulty also has a state-transition equation: \begin{equation*} d_{i} = [d_{i-1}, d_{i-1} + \theta _{3}]\cdot [r_{i-1}, 1-r_{i-1}]^{T}, \tag{9} \end{equation*}
+View Source Right-click on figure for MathML and additional features. \begin{equation*} d_{i} = [d_{i-1}, d_{i-1} + \theta _{3}]\cdot [r_{i-1}, 1-r_{i-1}]^{T}, \tag{9} \end{equation*} where \theta _{3} is greater than zero to keep the difficulty increasing in each forgetting event. We set an upper limit to prevent the difficulty from increasing indefinitely.
+
+Finally, we formulate the memory state-transition equation set of DHP-HLR: \begin{align*} \begin{bmatrix}h_{i} \\ d_{i} \end{bmatrix} & =\begin{bmatrix}h_{i-1} \left(e^{\boldsymbol{\theta }_{1} \cdot \boldsymbol{x}_{i-1}}+1\right) & e^{\boldsymbol{\theta }_{2} \cdot \boldsymbol{x}_{i-1}} \\ d_{i-1} & d_{i-1}+\theta _{3} \end{bmatrix}\begin{bmatrix}r_{i-1} \\ 1-r_{i-1} \end{bmatrix} \\ \boldsymbol{x}_{i-1} & = [\log d_{i-1}, \log h_{i-1},\log (1-p_{i-1})] \\ r_{i-1} & \sim Bernoulli(p_{i-1}) \\ p_{i-1} & =2^{-\Delta t_{i-1}/h_{i-1}} \\ h_{1} & = - 1 / \log _{2}(0.925 - 0.05 \cdot d_{0}), \tag{10} \end{align*}
+View Source Right-click on figure for MathML and additional features. \begin{align*} \begin{bmatrix}h_{i} \\ d_{i} \end{bmatrix} & =\begin{bmatrix}h_{i-1} \left(e^{\boldsymbol{\theta }_{1} \cdot \boldsymbol{x}_{i-1}}+1\right) & e^{\boldsymbol{\theta }_{2} \cdot \boldsymbol{x}_{i-1}} \\ d_{i-1} & d_{i-1}+\theta _{3} \end{bmatrix}\begin{bmatrix}r_{i-1} \\ 1-r_{i-1} \end{bmatrix} \\ \boldsymbol{x}_{i-1} & = [\log d_{i-1}, \log h_{i-1},\log (1-p_{i-1})] \\ r_{i-1} & \sim Bernoulli(p_{i-1}) \\ p_{i-1} & =2^{-\Delta t_{i-1}/h_{i-1}} \\ h_{1} & = - 1 / \log _{2}(0.925 - 0.05 \cdot d_{0}), \tag{10} \end{align*} where the parameters for h_{1} are derived from the grouping of difficulty.
+
+Based on (10) and the initial values of difficulty d_{0} , the halflife h_{i} of any memory behaviors can be calculated. The calculation process is displayed in Fig. 5 .
+Fig. 5. - The structure of DHP-HLR. $d_{i}$di and $h_{i}$hi represent the memory state during the spaced repetition. The current input of memory behavior and the last memory state determine the new memory state. Therefore, DHP-HLR has the Markov property.
+Fig. 5.
+
+The structure of DHP-HLR. d_{i} and h_{i} represent the memory state during the spaced repetition. The current input of memory behavior and the last memory state determine the new memory state. Therefore, DHP-HLR has the Markov property.
+
+Show All
+D. GRU-HLR Model
+
+Explainability is a benefit of DHP-HLR. However, manually designing the state transition equation is its drawback. Therefore, GRU network, a type of recurrent neural network, is introduced to facilitate the process.
+
+Based on (4) , GRU-HLR can be desribed as follows: \begin{equation*} \hat{h}_{i}=\text{GRU}(\boldsymbol{\Delta t}_{1:i-1}, \boldsymbol r_{1:i-1}, \boldsymbol p_{1:i-1}). \tag{11} \end{equation*}
+View Source Right-click on figure for MathML and additional features. \begin{equation*} \hat{h}_{i}=\text{GRU}(\boldsymbol{\Delta t}_{1:i-1}, \boldsymbol r_{1:i-1}, \boldsymbol p_{1:i-1}). \tag{11} \end{equation*}
+
+To reduce the error of predicted recall probability, we improve the loss function in (7) as: \begin{equation*} l(e_{i},\boldsymbol \theta)=\left|\frac{h_{i}-\hat{h}_{i}}{h_{i}+\hat{h}_{i}}\right|+C||\boldsymbol \theta ||_{2}^{2}, \tag{12} \end{equation*}
+View Source Right-click on figure for MathML and additional features. \begin{equation*} l(e_{i},\boldsymbol \theta)=\left|\frac{h_{i}-\hat{h}_{i}}{h_{i}+\hat{h}_{i}}\right|+C||\boldsymbol \theta ||_{2}^{2}, \tag{12} \end{equation*} where we replace the mean squared error (MSE) with the symmetric mean absolute percentage error (sMAPE) to minimize the mean absolute error (MAE) of p .
+
+With GRU-HLR, it is possible to not only predict the halflife and recall probability, but also capture the dynamics of memory: \begin{equation*} \boldsymbol h_{i}, \boldsymbol s_{i}=\text {GRU-HLR}(\boldsymbol s_{i-1}, \Delta t_{i-1}, r_{i-1}, p_{i-1}), \tag{13} \end{equation*}
+View Source Right-click on figure for MathML and additional features. \begin{equation*} \boldsymbol h_{i}, \boldsymbol s_{i}=\text {GRU-HLR}(\boldsymbol s_{i-1}, \Delta t_{i-1}, r_{i-1}, p_{i-1}), \tag{13} \end{equation*} where \boldsymbol s is the hidden state in GRU, corresponding to the memory state of a word in the learner's mind. The GRU describes how the memory state is updated from the i-1 th review event to i th review event. Moreover, the memory state in spaced repetition can be formulated as the Markov decision process (MDP), where the action and cost are formulated in Section IV-B .
+
+SECTION IV.
+Spaced Repetition Schedule Optimization
+
+In this section, we set up a practical goal for spaced repetition and formulate it as a stochastic shortest path problem, which can be solved by stochastic dynamic programming.
+A. Problem Setup
+
+Learners can effectively establish long-term memory via spaced repetition. The number of repetitions and the time spent on each repetition represent the cost of memory, whereas the memory halflife assesses the long-term memory's storage strength. Therefore, the goal of spaced repetition schedule optimization is to achieve a particular quantity of learned content with the target halflife at the lowest possible memory cost or to consolidate additional learning materials to the target halflife within a certain memory cost limitation. The latter may be reduced to making a memory material achieve the desired halflife at the minimized memory cost (MMC).
+
+The long-term memory model we construct in Section III-D satisfies the Markov property. In DHP-HLR and GRU-HLR, the state of each memory depends only on the last state, the current review interval, and the result of the recall, which follows a distribution that relies on the review interval. Due to the randomness of halflife state-transition, the number of reviews required for memorizing material to reach the target halflife is uncertain. Therefore, the spaced repetition scheduling problem can be regarded as a problem of infinite-time stochastic dynamic programming. Since it has a termination state, which is the target halflife, in the case of long-term memory formation. It could be transformed into a stochastic shortest path (SSP) problem [35] , of which the goal is to control an agent, who dynamically evolves in a system consisting of finite states, to converge on a predetermined objective. Actions attached with costs are scheduled for the agent in each time period. Transitions in the system are regulated by probability distributions, which depend only on the last action. The policy's goal is to select an action for each state to minimize the total expected cost incurred by the agent before reaching the target state beginning from a given initial state. In the case of spaced repetition optimization, the states are the halflife of memory and other hidden states; the actions are the intervals for the next reviews; the cost is the time of each review; the target state is a long halflife, which means the memory is stable enough that no need to review again.
+
+Combining with the optimization goal, we name the algorithm as SSP-MMC.
+
+As shown in Fig. 6 , circles are memory states, squares are review action (i.e., the interval after the current review), dashed arrows indicate state transitions for a given review interval, and black edges represent review intervals available in a given memory state. The stochastic shortest path problem in spaced repetition is to find the optimal review interval to minimize the expected review cost of reaching the target state.
+Fig. 6. - The stochastic shortest path problem in spaced repetition. The percentage above the dashed arrows is the probability of successful or forgetting if the learner executes the corresponding review interval. The number attached to solid arrows is the cost when the learner chooses the review interval.
+Fig. 6.
+
+The stochastic shortest path problem in spaced repetition. The percentage above the dashed arrows is the probability of successful or forgetting if the learner executes the corresponding review interval. The number attached to solid arrows is the cost when the learner chooses the review interval.
+
+Show All
+B. Formulation
+
+To solve the problem, our proposed method is to model the reviewing process for a word as an MDP with a set of states \mathcal {S} , actions \mathcal {A} , state-transition probability \mathcal {P} , and cost function \mathcal {J} . The agent's goal is to find a policy \pi that minimizes the expected review cost to achieving the target state s_{N} : \begin{equation*} \pi ^{*}=\underset{\pi \in \Pi }{\operatorname{argmin}} \lim \limits _{N\to \infty } \mathbb {E}_{s_{0}, a_{0}, \ldots }\left[\sum _{t=0}^{N} \mathcal {J}\left(s_{t}, a_{t}\right) \mid \pi \right]\!. \tag{14} \end{equation*}
+View Source Right-click on figure for MathML and additional features. \begin{equation*} \pi ^{*}=\underset{\pi \in \Pi }{\operatorname{argmin}} \lim \limits _{N\to \infty } \mathbb {E}_{s_{0}, a_{0}, \ldots }\left[\sum _{t=0}^{N} \mathcal {J}\left(s_{t}, a_{t}\right) \mid \pi \right]\!. \tag{14} \end{equation*}
+
+The state-space \mathcal {S} depends on the state size of the memory model. The DHP-HLR only has two state variables so that the state can be formulated as s = (d, h) . For GRU-HLR, the state relies on the hidden layers, which use \tanh as the activate function with range of (-1,1) . It can be discretized as follows: \begin{equation*} S \xrightarrow []{(\lfloor \frac{s}{\varepsilon } \rfloor |s \in \mathcal {S})} \mathrm{S}, \tag{15} \end{equation*}
+View Source Right-click on figure for MathML and additional features. \begin{equation*} S \xrightarrow []{(\lfloor \frac{s}{\varepsilon } \rfloor |s \in \mathcal {S})} \mathrm{S}, \tag{15} \end{equation*} where \varepsilon is the step width of discretization.
+
+The action space \mathcal {A}=\lbrace \Delta t_{1},\Delta t_{2},\ldots,\Delta t_{n}\rbrace consists of N intervals that the agent can schedule for the item. We discretize the intervals to days because most users prefer to review at a specific time block, instead of the entire day. And it is infeasible to control the specific timing of reviews when the actual user has other tasks to do. The state-transition probability \mathcal {P}_{s,a}(s^{\prime }) is the probability item recalled at state s and action a , described in (5) . The cost function \mathcal {J} is defined as: \begin{align*} \mathcal {J}(s_{0}) & = \lim \limits _{N\to \infty } E\left\lbrace \sum \limits _{t=0}^{N-1}g_{t}(s_{t},a_{t}(s_{t}), r_{t}) \right\rbrace \\ r_{t} & \sim Bernoulli(p_{t}), \tag{16} \end{align*}
+View Source Right-click on figure for MathML and additional features. \begin{align*} \mathcal {J}(s_{0}) & = \lim \limits _{N\to \infty } E\left\lbrace \sum \limits _{t=0}^{N-1}g_{t}(s_{t},a_{t}(s_{t}), r_{t}) \right\rbrace \\ r_{t} & \sim Bernoulli(p_{t}), \tag{16} \end{align*} where the g_{t} is the cost per stage and the r_{t} is the result of recall which follows the Bernoulli distribution. The target state s_{N} corresponds to a halflife bigger than h_{N} , which is the target halflife.
+
+C. Algorithm
+
+We solve the MDP( \mathcal {S},\mathcal {A},\mathcal {P},\mathcal {J} ) using value iteration with DHP-HLR and GRU-HLR to capture the dynamic of the memory state. The Bellman equation is: \begin{align*} \mathcal {J}^*(s) & = \min \limits _{a \in \mathcal {A}(s)} \left\lbrace \sum \limits _{s^{\prime }}\mathcal {P}_{s,a}(s^{\prime })(g(r) + \mathcal {J}^*(s^{\prime }))\right\rbrace \\ s^{\prime } & = \mathcal {F}(s,a,r,p), \tag{17} \end{align*}
+View Source Right-click on figure for MathML and additional features. \begin{align*} \mathcal {J}^*(s) & = \min \limits _{a \in \mathcal {A}(s)} \left\lbrace \sum \limits _{s^{\prime }}\mathcal {P}_{s,a}(s^{\prime })(g(r) + \mathcal {J}^*(s^{\prime }))\right\rbrace \\ s^{\prime } & = \mathcal {F}(s,a,r,p), \tag{17} \end{align*} where the \mathcal {J}^* is the optimal cost function, and \mathcal {F} is the state-transfrom function including DHP-HLR and GRU-HLR. For simplicity, we only consider the response of recall r : g(r) = a \cdot r + b \cdot (1-r) , a is the cost of recall and b is the cost of forgetting.
+
+Based on (17) , the value iteration algorithm, as described in Algorithm 1 , uses a cost matrix to record the optimal cost and a policy matrix to save the optimal action for each state during the iteration.
+Algorithm 1: SSP-MMC.
+Algorithm
+
+In addition to the Algorithm 1 , if it uses GRU-HLR as the state-transfrom function, the halflife h can be transformed from memory state s via the fully-connected layer of GRU-HLR.
+SECTION V.
+Experiment
+
+This section evaluates our framework in two aspects: memory predicting and schedule optimizing. To obtain deeper insight, we also analyze the model weights and the policy derived from SSP-MMC.
+A. Memory Predicting
+1) Experimental Setting
+
+Dataset We collected 220 million review event logs formulated in (1) from the online language-learning APP MaiMemo, and preprocessed them into 71,697 grouping samples formulated in (4) .
+
+Baselines We compared DHP-HLR and GRU-HLR with Pimsleur [23] , Leitner [24] , HLR and its variant [9] . To understand the contribution of the time-series features to GRU-HLR, we set ablation experiments, considering four variants of GRU-HLR: with and without \boldsymbol{\Delta t}_{1:i-1} features (-t), and with and without the \boldsymbol p_{1:i-1} feature (-p).
+
+Metrics We considered two different criteria to assess the performance. The first metric is MAE(p), the absolute error between the predicted recall probability and the actual recall probability. The recall probability is a value between 0 and 1. The smaller the MAE, the more accurate the prediction. The second metric is sMAPE(h), the relative error between the predicted and actual halflife.
+
+Implements The size of the hidden layer of GRU-HLR determines the dimensions of state space. For a fair comparison between DHP-HLP and GRU-HLR, we set the hidden layer size to 2. We randomly selected 20% of the data for tuning the hyperparameters of GRU-HLR and finally selected the followings: iterations=1,000,000, learning_rate=0.001, weight_decay=0.00001. For the remaining 80% of the data, 5 \times 2 -fold cross-validation was used for evaluation.
+2) Result and Analysis
+
+Table IV reports the results of each memory model on two metrics. We can see GRU-HLR with both \boldsymbol{p}_{1:i-1} and \boldsymbol{\Delta t}_{1:i-1} features performs the best. Moreover, all GRU-HLR variants achieve lower MAE by at least 64% when compared to HLR. The DHP-HLR outperforms the original HLR. We drew the distributions of errors depicted in Fig. 7 in order to analyze the benefits of our models. The recall probability distribution for the dataset is shown by the bars in Fig. 7(a) . The majority of samples has recall probabilities between 80% and 90%. The MAE(p) of GRU-HLRs is less than 0.05 in (40\%, 100\%) . However, since the recall probability depends on the memory's halflife and the review interval, it is more feasible to directly analyze the distribution of sMAPE(h) shown in Fig. 7(b) .
+TABLE IV Performance of Each Memory Model on Two Metrics (Bold Font for the Best)
+Table IV- Performance of Each Memory Model on Two Metrics (Bold Font for the Best)
+Fig. 7. - Distribution of actual recall probability, halflife and errors.
+Fig. 7.
+
+Distribution of actual recall probability, halflife and errors.
+
+Show All
+
+Most halflife values, in Fig. 7(b) , fall between 4 to 32 days. The HLRs perform worse when the halflife is less than 16 days or more than 129 days. It is because statistical features, e.g., the accumulative historical number of recall and the number of forgetting, cannot distinguish the difference between sequences like \boldsymbol r_{1:2}=(1,0) and \boldsymbol r_{1:2}=(0,1) . The difference is significant in our dataset shown in Fig. 3 . The halflife after forgetting is significantly less than the halflife after recall, but the HLRs can only yield compromised predictions during training, inducing large errors. Another noteworthy observation is that most models have large errors in the interval with higher halflife and fewer samples, but HLRs also have greater errors in the interval with a halflife of 4 to 8 days. In addition to the effect caused by the statistical characteristics, we argued that the loss function in (7) also contributes negatively. The item \alpha (h-\hat{h})^{2} punishes the error of any halflife interval indiscriminately so that the percentage error of the low halflife interval is substantial. The GRU-HLRs overcome this problem by improving the loss function with sMAPE in (12) . As for the higher halflife interval greater than 141 days, most models perform unsatisfactorily, probably because the noise from the real world increases. From a practical point of view, when the memory halflife becomes longer, the possibility of learners reviewing outside the APP before the next review is increasing, and the memory behavior data collected will also deviate from the learner's real situation. For these partial cases, making accurate predictions is, arguably, less important.
+
+Returning to Table IV , the results of the ablation experiments are that GRU-HLR -p with additional feature \boldsymbol{\Delta t}_{1:i-1} and GRU-HLR -t with additional feature \boldsymbol p_{1:i-1} are better than GRU-HLR -p -t with only feature \boldsymbol r_{1:i-1} . Among them, the feature \boldsymbol p_{1:i-1} is the most helpful in reducing the error. Moreover, the difference between GRU-HLR with both \boldsymbol{\Delta t}_{1:i-1} and \boldsymbol p_{1:i-1} features and GRU-HLR -t is smaller. As to why features can reduce prediction errors, we assumed it is related to the memory's retrieval strength and storage strength in psychology. Storage strength represents how well learned something is; retrieval strength is how accessible (or retrievable) something is. Memories that are more difficult to retrieve tend to be strengthened more by recall [33] . In the proposed models, the historical recall probability represents the retrieval strength of each recall, and the halflife is equivalent to the storage strength. Therefore, the recall probability history is useful for predicting the halflife. The interval between reviews is also important information. Reviewing at intervals (0-2-4-6-8) and reviewing at intervals (0-5-5-5-5) have significantly different results [36] , as verified by the results of GRU-HLR -p and GRU-HLR -t -p. However, the difference between GRU-HLR and GRU-HLR -t is negligible. We argued that the feature \boldsymbol p_{1:i-1} holds information of the feature \boldsymbol{\Delta t}_{1:i-1} . According to (5) , p_{i} relies on \Delta t_{i} and h_{i-1} which is already contained in the hidden layer. Therefore, the review interval can be considered as a surrogate variable of the recall probability. It is worth noting that the review interval is truncated to the nearest day. Some information may have been lost, whereas the recall probability is not subject to such limitation. This may explain why the contribution of recall probability features is greater than that of review interval features.
+B. Model Analysis
+
+Interpretability is a feature of DHP-HLR, and we visualized DHP-HLR in 3D plots. At the same time, we performed a similar analysis on GRU-HLR to explain whether the neural network learns similar patterns.
+1) DHP-HLR Model
+
+According to the parameters obtained by fitting the dataset and the equations of the model, we obtained the recurrence formula of the halflife after a successful recall: \begin{equation*} h_{i} = h_{i-1} \cdot (e^{3.25} \cdot d_{i-1}^{-0.386} \cdot h_{i-1}^{-0.147} \cdot (1 - p_{i-1})^{0.821} + 1), \tag{18} \end{equation*}
+View Source Right-click on figure for MathML and additional features. \begin{equation*} h_{i} = h_{i-1} \cdot (e^{3.25} \cdot d_{i-1}^{-0.386} \cdot h_{i-1}^{-0.147} \cdot (1 - p_{i-1})^{0.821} + 1), \tag{18} \end{equation*} where the exponent of base d is negative, the h_{i} decreases with the growth of d . Fig. 8(a) illustrates that the h_{i} after successful recall increases as p decreases, which verifies the existence of the spacing effect [3] . Fig. 8 shows that the growth of the h_{i} decreases as the h_{i-1} increases, which may imply that the potential of learns’ memory consolidation decreases as the memory storage strength increases, i.e., there is a marginal effect.
+
+Fig. 8. - The projection of DHP-HLR.
+Fig. 8.
+
+The projection of DHP-HLR.
+
+Show All
+
+Similarly, the recurrence formula of the halflife after a forgetting is: \begin{equation*} h_{i} = e^{1.003} \cdot d_{i-1}^{-0.152} \cdot h_{i-1}^{0.264} \cdot (1 - p_{i-1})^{-0.017}, \tag{19} \end{equation*}
+View Source Right-click on figure for MathML and additional features. \begin{equation*} h_{i} = e^{1.003} \cdot d_{i-1}^{-0.152} \cdot h_{i-1}^{0.264} \cdot (1 - p_{i-1})^{-0.017}, \tag{19} \end{equation*} where the exponent of bases d is less than its corresponding, which means the difficulty has a weak impact on the memory after a forgetting. Fig. 8(d) shows that the longer the h_{i-1} , the longer its h_{i} after a forgetting, which may be because the memory is not entirely lost in forgetting. Moreover, as p_{i-1} decreases, the h_{i} after a forgetting also decreases, possibly due to the fact that the memory is forgotten more entirely over time.
+
+2) GRU-HLR Model
+
+GRU-HLR is visualized in the similar manner. By traversing each memory state and review interval, we computed the h_{i-1} , p_{i-1} and h_{i} and mapped them to a 3-dimensional space in Fig. 9 . We found that the pattern of GRU-HLR prediction is very similar to that of DHP-HLR. For example, Fig. 9(a) shows that the h_{i} increases with the growth of the h_{i-1} and the decline of the p_{i-1} . One of the key differences between Figs. 8(a) and 9(a) is that the h_{i} in GRU-HLR saturates when the p_{i-1} becomes small enough, e.g., around 0.45 as shown in Fig. 9(a) . It is related to the halflife range in our dataset. Longer halflife data require a longer time to collect. The h_{i} increases after recall in Fig. 9(a) is higher at the lower h_{i-1} and also has the same pattern as DHP-HLR. However, when the h_{i-1} is close to 0, the difference is more distinguishable, possibly because more difficult words tend to produce many data with a lower halflife, and these words generally have lower halflife increases. Comparing Figs. 8(d) and 9(d) , there is a huge divergence between DHP-HLR and GRU-HLR. In GRU-HLR, the predicted h_{i} after a forgetting is near 800 days when p_{i-1} is 50% less. But that in DHP-HLR is less than 16 days. Due to data sparsity in this area, it remains unclear that which model performs better in this experiment. Based on domain experience and prerequisite information, however, we conjectured that DHP-HLR's predictions are closer to reality. It is the disadvantage of the neural network-based model that small sample size in certain area and big hypothesis space may lead to large errors [37] .
+Fig. 9. - The projection of GRU-HLR.
+Fig. 9.
+
+The projection of GRU-HLR.
+
+Show All
+C. Schedule Optimizing
+1) Environment
+
+The environment is based on DHP-HLR and GRU-HLR trained in Section V-A . The simulation process involves two dimensions, inter-day and intra-day. To simulate the learner's preparation period and daily study time constraints, the environment limits the number of days the simulation is conducted and the time spent on review and study each day. However, due to the stochastic nature of memory, the review schedule for the day may take longer than the daily time limit. To alleviate this situation, the review is scheduled before learning. When the daily time is exhausted, the remaining review is postponed to the next day regardless of whether it is completed.
+Algorithm 2: Spaced Repetition Simulator.
+Algorithm
+
+The simulation process is shown in Algorithm 2 , where the Student represents the learner's memory model, which updates the memory state according to the review situation. The Schedule is the interval repetition algorithm scheduler that adjusts the review interval based on the learner's feedback on the memory state. The day_{limit} is the period limit. The cost_{limit} , the daily review cost limit, is the maximum amount of time a learner can spend on review per day. The h_{N} is the target halflife. When the halflife of the word exceeds this value, it will not be scheduled for review and will be remembered forever.
+
+We set a recall halflife of 360 days (near one year) as the target halflife and set 600 s (10 min) as the upper limit of daily learning cost. We used the average time spent by learners of 3 s for recall and 9 s for forgetting. Then, we set a simulation duration of 1000 days for learning.
+2) Baselines and Metrics
+
+We compared SSP-MMC with five baseline scheduling algorithms:
+
+    RANDOM, which chooses a random interval from [1,\text {halflife}] to schedule the review.
+
+    ANKI, a variant of SM-2 [38] .
+
+    HALF-LIFE, where the halflife is used as the review interval.
+
+    THRESHOLD, review when p is less than or equal to a certain level (we adopted 90% which is default in SuperMemo [25] ).
+
+    MEMORIZE, an algorithm based on optimal control, with codes from the open-source repository of [27] . It is trained to determine the parameter for minimizing expectation of review cost.
+
+Our evaluation metrics include:
+
+    THR (target halflife reached) is the number of words that reach the target halflife.
+
+    SRP (summation of recall probability) is the summation of all learned words’ recall probability. The recall probability is set at 100% when the word reaches the target halflife to simulate that the learner has formed a solid long-term memory.
+
+    WTL (words total learned) is the number of total learned words.
+
+3) Result and Analysis
+
+It is expected that SSP-MMC outperforms all baselines in the measure THR in both of the proposed memory models. The THR is consistent with the optimization goal of SSP-MMC, thus, SSP-MMC can reach the upper bound of this metric theoretically. To quantify the relative difference between the performance of each algorithm, we compared the number of days for \text {THR} = 2000 (i.e., the COST of total review shown in Table V ). SSP-MMC saves about 12.5% cost of review compared with MEMORIZE in DHP-HLR and 16.8% compared with THRESHOLD in GRU-HLR. The trend of THR during the simulation is approximately linear, as shown in Fig. 10(a) and (b) . It means that the speed of memorizing words is constant. Hence, the advantage of SSP-MMC over other baselines is almost independent of the learning time.
+TABLE V Results of Simulations in Several Schedules and Memory Models
+Table V- Results of Simulations in Several Schedules and Memory Models
+Fig. 10. - Simulation results of schedule optimizing.
+Fig. 10.
+
+Simulation results of schedule optimizing.
+
+Show All
+
+As shown in Fig. 10(c) and (d) , the comparison among schedules in SRP is similar to that in THR. So the learner following the schedules of the SSP-MMC will remember the most. In the metric WTL shown in Fig. 10(e) and (f) , the SSP-MMC outperforms other baselines because it minimizes the cost of memorization and gives learners more time to learn new words.
+D. Policy Analysis
+1) DHP-HLR Model
+
+By training Algorithm 1 in the environment of the {\sf DHP} model, we obtained the expected review cost and the optimal review interval for each memory state.
+
+The review cost decreases as the halflife increases and increases as the difficulty increases, as shown in Fig. 11(a) . Memories with a high halflife reach the target halflife at a lower expected cost. In addition, memories with greater difficulty have a higher expected cost because they have a lower halflife growth, as shown in Fig. 8(c) , and require more reviews to reach the target halflife.
+Fig. 11. - The optimal policy on DHP-HLR.
+Fig. 11.
+
+The optimal policy on DHP-HLR.
+
+Show All
+
+The interval increases with difficulty for the same level of memory halflife, as shown in Fig. 11(b) . The reason could be that forgetting raises the difficulty of simple memories and decreases their halflife, leading to higher review costs. The scheduling algorithm tends to give shorter intervals to simple memories and reduce their probability of forgetting, even if it sacrifices a small amount of halflife boost. The interval reaches its peak in the midrange of halflife. It is necessary to compare Fig. 11(b) with 11(c) to explain the peak.
+
+The recall probability corresponding to the optimal review interval increases with halflife and decreases with difficulty, as shown in Fig. 11(c) . It means that the scheduler will instruct learners to review at a lower retrieval strength in the early stages of memorization, which may reflect ”desirable difficulties” [33] . As the halflife increases to the target value, the recall probability approaches 100%. According to the equation \Delta t = - h \cdot \log _{2} p and the trend of p on h , optimal review interval \Delta t first increases and then decreases where the peak emerges.
+2) GRU-HLR Model
+
+To analyze the optimal policy derived by the SSP-MMC on GRU-HLR, we visualized the state space of GRU-HLR and its corresponding halflife, cost, interval, and recall probability.
+
+Fig. 12(a) illustrates the halflife in each state (s1,s2) . The maximun and minimum values of the halflife are at (1,-1) and (-1,1) . Intuitively, the maximum of cost corresponds to the minimum of halflife. However, in Fig. 12(b) , the maximum value of the cost is not located at the coordinates (-1,1) . Also, the costs are not equal on the contour lines of halflife. This suggests that, in addition to halflife, it requries more features to better represent the memory state, where difficulty is not negligible. Fig. 12(c) and (a) show that the optimal interval of review increases first and then decreases as the halflife increases, which is similar to the pattern shown in Fig. 11(b) . The same pattern can also be found by comparing Fig. 11(d) and (c) . Therefore, the optimal policy derived by the SSP-MMC algorithm also reflects the inherent similarity of the two memory models.
+Fig. 12. - The optimal policy on GRU-HLR.
+Fig. 12.
+
+The optimal policy on GRU-HLR.
+
+Show All
+E. Generality of SSP-MMC
+
+To further validate the generality of our optimization algorithm SSP-MMC, we port it into the experiment and dataset in [32] . The training and testing procedures are in line with their open-source code. The optimal policy of SSP-MMC is trained in their student model, the original HLR [9] , described in (6) . We compare the performance of SSP-MMC with two alternatives: (i) a state-of-the-art method called TPPRL [32] , which does not make any assumptions on the model of memory, and (ii) a baseline schedule which chooses items uniformly at random with a constant reviewing rate.
+
+The results are shown in Fig. 13 , where the cost of review by each method is the same. Fig. 13(a) shows that our SSP-MMC is on par with TPPRL in maximizing the empirical recall probability at time T + \tau . Fig. 13(b) compares the average fraction of review cost per day across all items for SSP-MMC and TPPRL. Both SSP-MMC and TPPRL have a constant load over time. To summarize, SSP-MMC still has a good performance on the dataset of [32] , which proves the generality of SSP-MMC. Besides, the time cost of SSP-MMC's training process, which linearly depends on the size of memory states, is less than TPPRL, which requires thousands of iterations with given items and learning time. In this experiment, training SSP-MMC only costs several seconds, but training TPPRL takes at least one hour. And SSP-MMC is more scalable than TPPRL. If the number of items or the length of the learning period was changed, TPPRL needs to train from scratch. In contrast, SSP-MMC only needs training once if the memory model doesn't change. In summary, our SSP-MMC not only has achieved promising performance, but also costs less time over TPPRL.
+Fig. 13. - Performance of SSP-MMC against TPPRL and a uniform baseline.
+Fig. 13.
+
+Performance of SSP-MMC against TPPRL and a uniform baseline.
+
+Show All
+SECTION VI.
+Conclusion and Future Work
+
+We designed a long-term memory model based on time-series information that can well fit the existing data, and provided a solid foundation for optimizing spaced repetition scheduling. The memory cost of learners is minimized as the goal of spaced repetition software based on stochastic optimal control theory. We derived a mathematically guaranteed scheduling algorithm for minimizing memory cost. SSP-MMC combines psychologically proven theories (e.g., forgetting curve and spacing effect) with modern machine learning techniques to reduce the cost of learners in forming long-term memory. Compared with the HLR, memory models based on time-series are significantly more accurate in predicting users’ long-term memory. The stochastic dynamic programming-based spaced repetition scheduling algorithm SSP-MMC outperforms the previous algorithm in all metrics. Experiment results verify the hypothesis that time-series features are very effective in predicting long-term memory. It suggests that the spaced repetition scheduling algorithm based on the time-series model and stochastic optimal control method can effectively predict learners’ long-term memory state and improve memory efficiency.
+
+Further work is certainly encouraged to improve time-series-based models by considering the effect of user features on memory state and validating these models beyond language learning applications. In addition, the scenarios where learners use spaced repetition methods are rather diverse. Designing optimization metrics that better help learners archive their goals is yet another area worth further investigation.
+ACKNOWLEDGMENTS
+
+Thanks to our collaborators at MaiMemo, especially Jun Huang, Jie Mao, and Zhen Zhang, who helped us build the log collecting and processing system.
+
+Authors
+Figures
+References
+Keywords
+Metrics
+More Like This
+A Scheduling Optimization Algorithm based on Graph Theory and Simulated Annealing
+
+2021 6th International Conference on Inventive Computation Technologies (ICICT)
+
+Published: 2021
+Intelligent Computer-Aided Instruction Modeling and a Method to Optimize Study Strategies for Parallel Robot Instruction
+
+IEEE Transactions on Education
+
+Published: 2013
+Show More
+References
+1.
+H. Ebbinghaus, Memory: A Contribution to Experimental Psychology, New York, NY, USA:Teachers College Press, 1913.
+Show in Context CrossRef Google Scholar
+2.
+N. J. Cepeda, H. Pashler, E. Vul, J. T. Wixted and D. Rohrer, "Distributed practice in verbal recall tasks: A review and quantitative synthesis", Psychol. Bull. , vol. 132, no. 3, pp. 354-380, 2006.
+Show in Context CrossRef Google Scholar
+3.
+N. J. Cepeda, E. Vul, D. Rohrer, J. T. Wixted and H. Pashler, "Spacing effects in learning: A temporal ridgeline of optimal retention", Psychol. Sci. , vol. 19, no. 11, pp. 1095-1102, Nov. 2008.
+Show in Context CrossRef Google Scholar
+4.
+S. TJ et al., "Impact of online education on intern behaviour around joint commission national patient safety goals: A randomised trial", BMJ Qual. Saf. , vol. 21, no. 10, pp. 819-825, Oct. 2012.
+Show in Context Google Scholar
+5.
+J. K. Maass, P. I. Pavlik and H. Hua, "How spacing and variable retrieval practice affect the learning of statistics concepts", Artif. Intell. Educ. , pp. 247-256, 2015.
+Show in Context CrossRef Google Scholar
+6.
+S. K. Carpenter, H. Pashler and N. J. Cepeda, "Using tests to enhance 8th grade students’ retention of u.s. history facts", Appl. Cogn. Psychol. , vol. 23, no. 6, pp. 760-771, Sep. 2009.
+Show in Context CrossRef Google Scholar
+7.
+S. Wan and Z. Niu, "A hybrid E-learning recommendation approach based on learners’ influence propagation", IEEE Trans. Knowl. Data Eng. , vol. 32, no. 5, pp. 827-840, May 2020.
+Show in Context View Article
+Google Scholar
+8.
+A. Cully and Y. Demiris, "Online knowledge level tracking with data-driven student models and collaborative filtering", IEEE Trans. Knowl. Data Eng. , vol. 32, no. 10, pp. 2000-2013, Oct. 2020.
+Show in Context View Article
+Google Scholar
+9.
+B. Settles and B. Meeder, "A trainable spaced repetition model for language learning", Proc. 54th Annu. Meeting Assoc. Comput. Linguistics , pp. 1848-1858, 2016.
+Show in Context CrossRef Google Scholar
+10.
+A. N. Rafferty, E. Brunskill, T. L. Griffiths and P. Shafto, "Faster teaching via POMDP planning", Cogn. Sci. , vol. 40, no. 6, pp. 1290-1332, Aug. 2016.
+Show in Context CrossRef Google Scholar
+11.
+Q. Kang and W. P. Tay, "Sequential multi-class labeling in crowdsourcing", IEEE Trans. Knowl. Data Eng. , vol. 31, no. 11, pp. 2190-2199, Nov. 2019.
+Show in Context View Article
+Google Scholar
+12.
+Y. Zhang, P. Zhao, Q. Wu, B. Li, J. Huang and M. Tan, "Cost-sensitive portfolio selection via deep reinforcement learning", IEEE Trans. Knowl. Data Eng. , vol. 34, no. 1, pp. 236-248, Jan. 2022.
+Show in Context View Article
+Google Scholar
+13.
+J. Ke, F. Xiao, H. Yang and J. Ye, "Learning to delay in ride-sourcing systems: A multi-agent deep reinforcement learning framework", IEEE Trans. Knowl. Data Eng. , vol. 34, no. 5, pp. 2280-2292, May 2022.
+Show in Context View Article
+Google Scholar
+14.
+J. R. Anderson, "ACT: A simple theory of complex cognition", Amer. Psychol. , vol. 51, no. 4, pp. 355-365, 1996.
+Show in Context CrossRef Google Scholar
+15.
+M. C. Mozer, H. Pashler, N. Cepeda, R. Lindsey and E. Vul, "Predicting the optimal spacing of study: A multiscale context model of memory", Proc. 22nd Int. Conf. Neural Inf. Process. Syst. , pp. 1321-1329, 2009.
+Show in Context Google Scholar
+16.
+S. Reddy, S. Levine and A. Dragan, "Accelerating human learning with deep reinforcement learning", Proc. Workshop: Teach. Mach. Robots Hum. , 2017.
+Show in Context Google Scholar
+17.
+S. Sinha, "Using deep reinforcement learning for personalizing review sessions on E-learning platforms with spaced repetition", 2019.
+Show in Context Google Scholar
+18.
+Z. Yang, J. Shen, Y. Liu, Y. Yang, W. Zhang and Y. Yu, "TADS: Learning time-aware scheduling policy with dyna-style planning for spaced repetition", Proc. 43rd Int. ACM SIGIR Conf. Res. Develop. Inf. Retrieval , pp. 1917-1920, 2020.
+Show in Context CrossRef Google Scholar
+19.
+P. Woźniak, E. Gorzelańczyk and J. Murakowski, "Two components of long-term memory", Acta Neurobiol. Exp. , vol. 55, no. 4, pp. 301-305, 1995.
+Show in Context Google Scholar
+20.
+K. Cho, D. Bahdanau and Y. Bengio, "On the properties of neural machine translation: Encoder-decoder approaches", Oct. 2014.
+Show in Context CrossRef Google Scholar
+21.
+J. Ye, J. Su and Y. Cao, "A stochastic shortest path algorithm for optimizing spaced repetition scheduling", Proc. 28th ACM SIGKDD Conf. Knowl. Discov. Data Mining , pp. 4381-4390, 2022.
+Show in Context CrossRef Google Scholar
+22.
+P. I. Pavlik and J. R. Anderson, "An ACT-R model of the spacing effect", Proc. 5th Int. Conf. Cogn. Model. , pp. 177-182, 2003.
+Show in Context Google Scholar
+23.
+P. Pimsleur, "A memory schedule", Modern Lang. J. , vol. 51, no. 2, pp. 73-75, Feb. 1967.
+Show in Context CrossRef Google Scholar
+24.
+S. Leitner, So Lernt Man Leben, Munich, Germany:Droemer-Knaur, 1974.
+Show in Context Google Scholar
+25.
+P. A. Woiniak and E. J. Gorzelanczyk, "Optimization of repetition spacing in the practice of learning", Acta Neurobiol. Exp. , vol. 54, no. 2, pp. 59-62, 1994.
+Show in Context Google Scholar
+26.
+S. Reddy, I. Labutov, S. Banerjee and T. Joachims, "Unbounded human learning: Optimal scheduling for spaced repetition", Proc. 22nd ACM SIGKDD Int. Conf. Knowl. Discov. Data Mining , pp. 1815-1824, 2016.
+Show in Context CrossRef Google Scholar
+27.
+B. Tabibian, U. Upadhyay, A. De, A. Zarezade, B. Schölkopf and M. Gomez-Rodriguez, "Enhancing human learning via spaced repetition optimization", Proc. Nat. Acad. Sci. , pp. 3988-3993, 2019.
+Show in Context CrossRef Google Scholar
+28.
+U. Upadhyay, G. Lancashire, C. Moser and M. Gomez-Rodriguez, "Large-scale randomized experiments reveals that machine learning-based instruction helps people memorize more effectively", NPJ Sci. Learn. , vol. 6, no. 1, pp. 1-3, Sep. 2021.
+Show in Context CrossRef Google Scholar
+29.
+A. Hunziker et al., "Teaching multiple concepts to a forgetful learner", Proc. 33rd Int. Conf. Neural Inf. Process. Syst. , pp. 4048-4058, 2019.
+Show in Context Google Scholar
+30.
+S. Hochreiter and J. Schmidhuber, "Long short-term memory", Neural Comput. , vol. 9, no. 8, pp. 1735-1780, Nov. 1997.
+Show in Context View Article
+Google Scholar
+31.
+A. Nioche, P.-A. Murena, C. de la Torre-Ortiz and A. Oulasvirta, "Improving artificial teachers by considering how people learn and forget", Proc. 26th Int. Conf. Intell. User Interfaces , pp. 445-453, 2021.
+Show in Context CrossRef Google Scholar
+32.
+U. Upadhyay, A. De and M. Gomez-Rodrizuez, "Deep reinforcement learning of marked temporal point processes", Proc. 32nd Int. Conf. Neural Inf. Process. Syst. , pp. 3172-3182, 2018.
+Show in Context Google Scholar
+33.
+R. A. Bjork et al., "A new theory of disuse and an old theory of stimulus fluctuation", Learn. Processes Cogn. Processes: Essays Honor William K. Estes , vol. 2, pp. 35-67, 1992.
+Show in Context Google Scholar
+34.
+A. W. Melton, "The situation with respect to the spacing of repetitions and memory", J. Verbal Learn. Verbal Behav. , vol. 9, no. 5, pp. 596-606, Oct. 1970.
+Show in Context CrossRef Google Scholar
+35.
+I. P. Androulakis, "Dynamic programming: Stochastic shortest path problems" in Encyclopedia of Optimization, Berlin, Germany:Springer, pp. 869-873, 2009.
+Show in Context Google Scholar
+36.
+G. B. Maddox, D. A. Balota, J. H. Coane and J. M. Duchek, "The role of forgetting rate in producing a benefit of expanded over equal spaced retrieval in young and older adults", Psychol. Aging , vol. 26, no. 3, pp. 661-670, 2011.
+Show in Context CrossRef Google Scholar
+37.
+D. Haussler, "Probably approximately correct learning", Proc. 8th Nat. Conf. Artif. Intell. , pp. 1101-1108, 1990.
+Show in Context Google Scholar
+38.
+P. A. Wozniak, "Optimization of learning", 1990, [online] Available: http://super-memory.com/english/ol.htm.
+Show in Context Google Scholar
+IEEE Personal Account
+
+    Change username/password 
+
+Purchase Details
+
+    Payment Options
+    View Purchased Documents 
+
+Profile Information
+
+    Communications Preferences
+    Profession and Education
+    Technical interests 
+
+Need Help?
+
+    US & Canada: +1 800 678 4333
+    Worldwide: +1 732 981 0060
+    Contact & Support 
+
+Follow
+
+About IEEE Xplore | Contact Us | Help | Accessibility | Terms of Use | Nondiscrimination Policy | IEEE Ethics Reporting | Sitemap | IEEE Privacy Policy
+
+A not-for-profit organization, IEEE is the world's largest technical professional organization dedicated to advancing technology for the benefit of humanity.
+
+© Copyright 2023 IEEE - All rights reserved.
+logo icon
