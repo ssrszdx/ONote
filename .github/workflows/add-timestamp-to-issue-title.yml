@@ -1,0 +1,31 @@
+name: Add Timestamp to Issue Title
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  add-timestamp:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Fetch issue details
+      id: issue
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const createdAt = new Date(context.payload.issue.created_at);
+          const year = createdAt.getFullYear();
+          const month = String(createdAt.getMonth() + 1).padStart(2, '0'); // getMonth() 返回的月份是从 0 开始的
+          const day = String(createdAt.getDate()).padStart(2, '0');
+          const timestamp = `${year}${month}${day}`;
+          const title = context.payload.issue.title;
+          const newTitle = `${timestamp}-${title}`;
+          github.rest.issues.update({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.payload.issue.number,
+            title: newTitle,
+          });
+          return newTitle;
+    - name: Log new title
+      run: echo "New title is ${{ steps.issue.outputs.result }}"
