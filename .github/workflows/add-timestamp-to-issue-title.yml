@@ -27,8 +27,3 @@ jobs:
             issue_number: issueNumber,
             title: newTitle
           });
-
-Explanation:
-Trigger: The workflow is triggered when a new issue is opened.
-Get current timestamp: The date command is used to get the current UTC timestamp in the format YYYY-MM-DD HH:MM:SS.
-Update issue title: The actions/github-script action is used to update the issue title by appending the timestamp.
