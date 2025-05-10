@@ -3,32 +3,34 @@ name: Add Timestamp to Issue Title
 on:
   issues:
     types: [opened]
-permissions:
-    contents: write
-    issues: write
-    pull-requests: write
+
 jobs:
   add-timestamp:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+
     steps:
-    - name: Fetch issue details
-      id: issue
+    - name: Get current timestamp
+      id: timestamp
+      run: echo "::set-output name=time::$(date -u +'%Y-%m-%d %H:%M:%S')"
+
+    - name: Update issue title with timestamp
       uses: actions/github-script@v6
       with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
-          const createdAt = new Date(context.payload.issue.created_at);
-          const year = createdAt.getFullYear();
-          const month = String(createdAt.getMonth() + 1).padStart(2, '0'); // getMonth() 返回的月份是从 0 开始的
-          const day = String(createdAt.getDate()).padStart(2, '0');
-          const timestamp = `${year}${month}${day}`;
-          const title = context.payload.issue.title;
-          const newTitle = `${timestamp}-${title}`;
-          github.rest.issues.update({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: context.payload.issue.number,
-            title: newTitle,
+          const issueNumber = context.issue.number;
+          const originalTitle = context.payload.issue.title;
+          const timestamp = '${{ steps.timestamp.outputs.time }}';
+          const newTitle = `[${timestamp}] ${originalTitle}`;
+          await github.rest.issues.update({
+            ...context.repo,
+            issue_number: issueNumber,
+            title: newTitle
           });
-          return newTitle;
-    - name: Log new title
-      run: echo "New title is ${{ steps.issue.outputs.result }}"
+
+Explanation:
+Trigger: The workflow is triggered when a new issue is opened.
+Get current timestamp: The date command is used to get the current UTC timestamp in the format YYYY-MM-DD HH:MM:SS.
+Update issue title: The actions/github-script action is used to update the issue title by appending the timestamp.
+
+This workflow will automatically add a timestamp to the title of any newly opened issue. Feel free to customize the timestamp format or the workflow as needed!
