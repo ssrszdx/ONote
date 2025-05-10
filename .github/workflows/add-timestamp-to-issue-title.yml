@@ -1,5 +1,4 @@
 name: Add Timestamp to Issue Title
-
 on:
   issues:
     types: [opened]
