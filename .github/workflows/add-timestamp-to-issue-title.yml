@@ -1,0 +1,29 @@
+name: Add Timestamp to Issue Title
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  add-timestamp:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Get current timestamp
+      id: timestamp
+      run: echo "::set-output name=time::$(date -u +'%Y-%m-%d %H:%M:%S')"
+
+    - name: Update issue title with timestamp
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const issueNumber = context.issue.number;
+          const originalTitle = context.payload.issue.title;
+          const timestamp = '${{ steps.timestamp.outputs.time }}';
+          const newTitle = `[${timestamp}] ${originalTitle}`;
+          await github.rest.issues.update({
+            ...context.repo,
+            issue_number: issueNumber,
+            title: newTitle
+          });
