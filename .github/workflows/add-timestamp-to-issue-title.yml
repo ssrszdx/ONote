@@ -1,4 +1,4 @@
-name: Add Timestamp to Issue Title
+- name: Add Timestamp to Issue Title
 
 on:
   issues:
