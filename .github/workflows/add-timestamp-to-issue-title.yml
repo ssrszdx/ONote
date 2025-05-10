@@ -1,8 +1,9 @@
 name: Add Timestamp to Issue Title
+
 on:
   issues:
     types: [opened]
- permissions:
+  permissions:
       contents: write
       issues: write
       pull-requests: write
