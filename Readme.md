@@ -18,9 +18,9 @@ model  hub  interface link  proxy
 
 PRJ分为三种类型
 
-过期类型 oPRJ
-长期类型 lPRJ
-有期类型 PRJ
+过期类型 OTP
+长期类型 LTP
+有期类型 P
 
 Git+Github+Vscode 搭建知识体系
 
